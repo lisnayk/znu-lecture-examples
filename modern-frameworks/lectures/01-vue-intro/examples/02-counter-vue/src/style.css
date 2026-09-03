@@ -1,0 +1,7 @@
+body { font-family: system-ui, sans-serif; margin: 2rem; color: #14161b; }
+h1 { font-size: 1.25rem; }
+.count { font-size: 3rem; font-weight: 700; margin: .5rem 0; }
+button { font: inherit; padding: .4rem .9rem; margin-right: .5rem; cursor: pointer; }
+ul { padding-left: 1.2rem; }
+li { margin: .2rem 0; }
+.empty { color: #6b7280; }
