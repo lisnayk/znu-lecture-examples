@@ -9,17 +9,21 @@ Vagrant.configure("2") do |config|
     vb.memory = 2048
     vb.cpus = 2
   end
-  config.vm.provision "file", source: "main.py", destination: "/home/vagrant/main.py"
-  config.vm.provision "file", source: "envinfo.py", destination: "/home/vagrant/envinfo.py"
-  config.vm.provision "file", source: "run-local.sh", destination: "/home/vagrant/run-local.sh"
-  config.vm.provision "file", source: "requirements.txt", destination: "/home/vagrant/requirements.txt"
+  # Код береться з відкритого репозиторію, як і в EC2: гостьова система
+  # отримує саме те, що опубліковано, а не вміст каталогу на хості.
+  # Наслідок: локальні правки потрапляють у VM лише після push.
   config.vm.provision "shell", inline: <<-SHELL
     set -e
     apt-get update
-    apt-get install -y python3-venv
-    install -d -o vagrant -g vagrant /home/vagrant/lab1
-    mv /home/vagrant/main.py /home/vagrant/envinfo.py /home/vagrant/run-local.sh /home/vagrant/requirements.txt /home/vagrant/lab1/
-    chown -R vagrant:vagrant /home/vagrant/lab1
-    su - vagrant -c 'cd ~/lab1 && python3 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt'
+    apt-get install -y git python3-venv
+    su - vagrant -c '
+      set -e
+      rm -rf ~/znu-lecture-examples
+      git clone --depth 1 https://github.com/lisnayk/znu-lecture-examples.git ~/znu-lecture-examples
+      ln -sfn ~/znu-lecture-examples/conteinerization/01-virtualization/fastapi-vm ~/lab1
+      cd ~/lab1
+      python3 -m venv .venv
+      .venv/bin/python -m pip install --disable-pip-version-check -r requirements.txt
+    '
   SHELL
 end
