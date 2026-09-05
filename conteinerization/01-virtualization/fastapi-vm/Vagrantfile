@@ -1,0 +1,25 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "generic/ubuntu2204"
+  config.vm.box_version = "4.3.12"
+  config.vm.hostname = "vc-lab1"
+  config.vm.network "forwarded_port",
+    guest: 8000, host: 8080, host_ip: "127.0.0.1"
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = 2048
+    vb.cpus = 2
+  end
+  config.vm.provision "file", source: "main.py", destination: "/home/vagrant/main.py"
+  config.vm.provision "file", source: "envinfo.py", destination: "/home/vagrant/envinfo.py"
+  config.vm.provision "file", source: "run-local.sh", destination: "/home/vagrant/run-local.sh"
+  config.vm.provision "file", source: "requirements.txt", destination: "/home/vagrant/requirements.txt"
+  config.vm.provision "shell", inline: <<-SHELL
+    set -e
+    apt-get update
+    apt-get install -y python3-venv
+    install -d -o vagrant -g vagrant /home/vagrant/lab1
+    mv /home/vagrant/main.py /home/vagrant/envinfo.py /home/vagrant/run-local.sh /home/vagrant/requirements.txt /home/vagrant/lab1/
+    chown -R vagrant:vagrant /home/vagrant/lab1
+    su - vagrant -c 'cd ~/lab1 && python3 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt'
+  SHELL
+end
