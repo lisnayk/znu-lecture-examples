@@ -8,8 +8,6 @@ if [[ ! -x .venv/bin/python ]]; then
   python3 -m venv .venv \
     || { printf '%s\n' 'Немає модуля venv: установіть пакет python3-venv.' >&2; exit 1; }
 fi
-if ! .venv/bin/python -c 'import fastapi, uvicorn' 2>/dev/null; then
-  .venv/bin/python -m pip install --disable-pip-version-check -q -r requirements.txt
-fi
+.venv/bin/python -m pip install --disable-pip-version-check -q -r requirements.txt
 printf 'Паспорт середовища: http://%s:%s ; зупинка — Ctrl+C.\n' "$HOST" "$PORT"
 exec .venv/bin/python -m uvicorn main:app --host "$HOST" --port "$PORT"

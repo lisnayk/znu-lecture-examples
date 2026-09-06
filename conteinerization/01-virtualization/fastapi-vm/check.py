@@ -4,7 +4,8 @@ import sys
 import urllib.error
 import urllib.request
 
-base = (sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8000").rstrip("/")
+args = [arg for arg in sys.argv[1:] if arg != "--student"]
+base = (args[0] if args else "http://127.0.0.1:8000").rstrip("/")
 SECTIONS = ("identity", "machine", "os", "cpu", "memory", "network", "runtime")
 
 
@@ -30,6 +31,12 @@ with fetch("/api/env") as response:
     assert not missing, missing
     assert payload["environment"]["machine"]["kind"], payload["environment"]["machine"]
     assert payload["request"]["listen"], payload["request"]
+    student = payload["environment"]["student"]
+    assert set(student) == {"full_name", "group", "year", "programme"}, student
+    if "--student" in sys.argv:
+        import html
+        assert all(isinstance(v, str) and v.strip() for v in student.values()), "Заповніть усі чотири поля .env"
+        assert all(html.escape(v) in body for v in student.values()), "Дані HTML та JSON різняться"
     print("PASS 200 /api/env")
 
 with fetch("/healthz") as response:

@@ -1,7 +1,7 @@
 """Збір відомостей про середовище виконання та їх подання сторінкою HTML.
 
 Модуль читає лише стандартні джерела Linux (/proc, /sys, /etc/os-release)
-і не має залежностей поза стандартною бібліотекою. Недоступні відомості
+і читає дані студента зі змінних середовища; .env завантажує python-dotenv. Недоступні відомості
 пропускаються, тому застосунок працює й там, де частини /proc немає.
 """
 from __future__ import annotations
@@ -17,6 +17,11 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+# Змінні процесу мають пріоритет над локальним файлом.
+load_dotenv(Path(__file__).with_name(".env"), encoding="utf-8-sig", interpolate=False)
 
 STARTED_AT = time.time()
 
@@ -288,6 +293,12 @@ def collect() -> dict[str, dict[str, object]]:
         runtime["namespaces"] = ", ".join(f"{k}: {v}" for k, v in namespaces.items())
 
     return {
+        "student": {
+            "full_name": os.getenv("STUDENT_FULL_NAME", "").strip(),
+            "group": os.getenv("STUDENT_GROUP", "").strip(),
+            "year": os.getenv("STUDENT_YEAR", "").strip(),
+            "programme": os.getenv("STUDENT_PROGRAMME", "").strip(),
+        },
         "identity": identity,
         "machine": machine,
         "os": operating_system,
@@ -311,6 +322,7 @@ def request_facts(request) -> dict[str, object]:
 
 
 TITLES = {
+    "student": "Дані студента",
     "identity": "Ідентичність",
     "machine": "Тип машини",
     "os": "Операційна система",
@@ -322,6 +334,10 @@ TITLES = {
 }
 
 LABELS = {
+    "full_name": "ПІБ",
+    "group": "Номер групи",
+    "year": "Курс навчання",
+    "programme": "Освітня програма",
     "hostname": "Ім'я вузла",
     "time": "Час у системі",
     "app_uptime": "Застосунок працює",
@@ -405,7 +421,7 @@ def _section(key: str, values: dict[str, object]) -> str:
             value = "; ".join(str(item) for item in value)
         label = LABELS.get(field, field)
         rows.append(
-            f"<dt>{html.escape(label)}</dt><dd>{html.escape(str(value))}</dd>"
+            f"<dt>{html.escape(label)}</dt><dd>{html.escape(str(value) if value != "" else "Не заповнено")}</dd>"
         )
     title = html.escape(TITLES.get(key, key))
     return f"<section><h2>{title}</h2><dl>{''.join(rows)}</dl></section>"
