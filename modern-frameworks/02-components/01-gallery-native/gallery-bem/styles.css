@@ -1,0 +1,449 @@
+/* ═══════════════════════════════════════════════════════════════════
+   FRAME — «Світло і простір». Стилі макета.
+
+   Порядок файлу: змінні → база → блоки → адаптив.
+   Кожен блок описаний одним суцільним шматком і не залежить від того,
+   де він стоїть у розмітці. Тому блок можна перенести в інше місце
+   сторінки, не правлячи жодного селектора — і тому кожен такий шматок
+   без змін переїжджає у <style scoped> відповідного компонента Vue.
+
+   Правила БЕМ, яких файл дотримується:
+   — селектори тільки за класами, глибина завжди один клас;
+   — жодного стилю за тегом усередині блоку (.gallery h2 заборонено);
+   — стан описує модифікатор (.photo--loading), а не окремий клас-прапорець;
+   — .micro — міксин: домішується до елемента різних блоків
+     і задає лише накреслення, не займаючи місця в розкладці.
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  color-scheme: light;
+
+  --paper: #f3f1e9;         /* тло сторінки */
+  --surface: #e7e9df;       /* тло колонки опису */
+  --ink: #23271f;           /* основний текст */
+  --muted: #65695c;         /* другорядний текст: 4.98:1 на paper, 4.59:1 на surface */
+  --line: #d5d7ca;          /* декоративні лінії */
+  --control-border: #7b856e;/* межа кнопок: 3.42:1 — нижче цього кнопка зникає з екрана */
+  --control-hover: #d9ddcf;
+  --control-active: #cbd1bf;
+  --tag-bg: #d3ddc4;
+  --tag-ink: #3e5031;
+  --focus: #454b3e;
+  --signal: #687e37;        /* «архів доступний»: єдина насичена пляма в шапці */
+  --photo-bg: #d3d7ca;      /* підкладка під фотографію, видима до завантаження */
+  --rule: #cad0bf;          /* лінійка в колонці опису */
+
+  --font-display: Georgia, "Times New Roman", serif;
+  --font-text: Arial, Helvetica, sans-serif;
+}
+
+/* ── База ──────────────────────────────────────────────────────── */
+
+* { box-sizing: border-box }
+
+/* Атрибут hidden має ховати елемент навіть тоді, коли блоку задано
+   display: без цього правила .gallery[hidden] лишилася б на екрані. */
+[hidden] { display: none !important }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-text);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.page__main {
+  max-width: 1480px;
+  margin: auto;
+  padding: 30px 56px 24px;
+}
+
+/* Міксин дрібного капітельного підпису. Використовується в кількох
+   блоках, тому не належить жодному з них. */
+.micro {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* ── Блок .site-header → SiteHeader.vue ────────────────────────── */
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 23px;
+  border-bottom: 1px solid var(--line);
+}
+
+.site-header__brand {
+  font-size: 27px;
+  font-weight: 900;
+  letter-spacing: -2px;
+}
+
+.site-header__mark {
+  display: inline-block;
+  width: 17px;
+  height: 17px;
+  margin-left: 7px;
+  background: var(--ink);
+  transform: rotate(-15deg);
+}
+
+.site-header__meta {
+  display: flex;
+  gap: 38px;
+  align-items: center;
+}
+
+/* ── Блок .badge ───────────────────────────────────────────────── */
+
+.badge {
+  border: 1px solid var(--line);
+  border-radius: 30px;
+  padding: 10px 15px;
+  letter-spacing: 1px;
+}
+
+.badge__dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--signal);
+}
+
+/* ── Блок .intro → SiteIntro.vue ───────────────────────────────── */
+
+.intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 30px;
+  padding: 35px 0 31px;
+}
+
+.intro__heading {
+  min-width: 0;
+}
+
+.intro__eyebrow {
+  margin: 0 0 13px;
+  color: var(--muted);
+}
+
+.intro__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(46px, 5.5vw, 83px);
+  font-weight: 400;
+  letter-spacing: -4px;
+  line-height: 1;
+  text-wrap: balance;
+}
+
+/* Ручних <br> тут навмисно немає: перенос рядка — справа ширини
+   колонки, а не автора тексту. */
+.intro__lead {
+  max-width: 255px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* ── Блок .gallery → Gallery.vue ───────────────────────────────── */
+
+.gallery {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  min-height: 420px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.gallery__details {
+  display: flex;
+  flex-direction: column;
+  padding: 28px;
+}
+
+.gallery-empty {
+  margin: 20px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ── Блок .photo → GalleryImage.vue ────────────────────────────── */
+
+.photo {
+  position: relative;
+  align-self: stretch;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--photo-bg);
+}
+
+.photo__image {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 220ms ease;
+}
+
+/* Затемнення нижньої частини, щоб білий підпис лишався читабельним
+   на будь-якій фотографії. */
+.photo::after {
+  content: "";
+  position: absolute;
+  inset: 50% 0 0;
+  background: linear-gradient(transparent, #0004);
+  pointer-events: none;
+}
+
+.photo__mark {
+  position: absolute;
+  top: 21px;
+  left: 23px;
+  padding: 9px 12px;
+  border-radius: 30px;
+  background: color-mix(in srgb, var(--paper) 93%, transparent);
+  font-size: 9px;
+  letter-spacing: 1.6px;
+}
+
+.photo__label {
+  position: absolute;
+  bottom: 22px;
+  left: 24px;
+  z-index: 1;
+  color: #fff;
+}
+
+.photo__message {
+  position: absolute;
+  inset: auto 24px 24px;
+  z-index: 1;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--paper) 93%, transparent);
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Стан компонента — модифікатор блоку. Поки кадр вантажиться,
+   попередній лишається видимим приглушено: порожній прямокутник
+   читається як помилка, приглушений — як очікування. */
+.photo--loading .photo__image { opacity: .45 }
+.photo--failed  .photo__image { opacity: 0 }
+.photo--failed::after { opacity: 0 }
+
+/* ── Блок .frame-info → FrameInfo.vue ──────────────────────────── */
+
+/* Блок не має власного вигляду: він групує три елементи й лишає
+   .gallery-nav прямою дитиною колонки, щоб margin-top: auto притискав
+   навігацію донизу. Група потрібна для сенсу розмітки, не для стилю. */
+.frame-info {
+  margin: 0;
+}
+
+.frame-info__counter {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  margin: 0;
+  /* Цифри однакової ширини: без цього номер сіпається при гортанні. */
+  font-variant-numeric: tabular-nums;
+}
+
+.frame-info__number {
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 400;
+  letter-spacing: -3px;
+}
+
+.frame-info__total {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.frame-info__title {
+  margin: 37px 0 16px;
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -1.3px;
+  text-wrap: balance;
+}
+
+.frame-info__text {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+/* ── Блок .tag-list → TagList.vue ──────────────────────────────── */
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tag-list__item {
+  padding: 6px 8px;
+  border-radius: 20px;
+  background: var(--tag-bg);
+  color: var(--tag-ink);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ── Блок .gallery-nav → GalleryNavigation.vue ─────────────────── */
+
+.gallery-nav {
+  margin-top: auto;
+  padding-top: 25px;
+}
+
+.gallery-nav__rule {
+  height: 1px;
+  margin-bottom: 17px;
+  background: var(--rule);
+}
+
+.gallery-nav__controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.gallery-nav__button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--control-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--focus);
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.gallery-nav__button:hover {
+  background: var(--control-hover);
+  border-color: var(--focus);
+  color: var(--ink);
+}
+
+.gallery-nav__button:active {
+  background: var(--control-active);
+}
+
+.gallery-nav__button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.gallery-nav__button:disabled {
+  opacity: .4;
+  cursor: default;
+}
+
+/* Клік по значку має потрапляти в кнопку, а не в <svg>:
+   інакше event.target інколи виявляється не тим елементом. */
+.gallery-nav__icon {
+  pointer-events: none;
+}
+
+.gallery-nav__hint {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* ── Блок .site-footer → SiteFooter.vue ────────────────────────── */
+
+.site-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 28px;
+  padding-top: 17px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 9px;
+  letter-spacing: .5px;
+}
+
+.site-footer__brand {
+  color: var(--ink);
+}
+
+/* ── Адаптив ───────────────────────────────────────────────────── */
+
+/* Від планшета й ширше фотографія веде висоту сама, без жорсткої пропорції. */
+@media (min-width: 651px) {
+  .photo { min-height: clamp(360px, 34vw, 560px) }
+}
+
+@media (max-width: 1000px) {
+  .page__main { padding: 24px }
+  .gallery { grid-template-columns: minmax(0, 1fr) 240px; min-height: 360px }
+  .gallery__details { padding: 24px }
+  .frame-info__title { font-size: 30px }
+  .intro__title { letter-spacing: -2px }
+  .site-header__note { display: none }
+}
+
+@media (max-width: 650px) {
+  .page__main { padding: 20px 17px }
+  .site-header__brand { font-size: 24px }
+  .badge { font-size: 8px }
+  .intro { display: block; padding: 27px 0 24px }
+  .intro__title { font-size: 50px }
+  .intro__lead { max-width: 300px; margin-top: 20px }
+  .gallery { grid-template-columns: 1fr }
+  .photo { aspect-ratio: 1.25 }
+  .gallery__details { padding: 22px }
+  .frame-info__number { font-size: 33px }
+  .frame-info__title { margin: 13px 0 12px }
+  .gallery-nav { padding-top: 19px }
+  .site-footer { gap: 20px; line-height: 1.6 }
+  .photo__label { font-size: 8px }
+  .intro__heading {
+  min-width: 0;
+}
+
+.intro__eyebrow { font-size: 8px }
+}
+
+/* Рух — прикраса, а не спосіб передати зміст: за потреби його вимикають. */
+@media (prefers-reduced-motion: reduce) {
+  .photo__image,
+  .gallery-nav__button { transition: none }
+}

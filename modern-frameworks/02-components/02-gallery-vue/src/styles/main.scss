@@ -1,0 +1,55 @@
+// ═══════════════════════════════════════════════════════════════════
+// Глобальні стилі. Тут лише те, що не належить жодному компоненту:
+// оголошення теми, скидання й типографіка сторінки.
+//
+// Токени й міксини сюди не імпортуються: їх підставляє Vite
+// (css.preprocessorOptions.scss.additionalData) у кожен файл SCSS
+// цього проєкту, включно з цим.
+// ═══════════════════════════════════════════════════════════════════
+
+:root {
+  color-scheme: light;
+
+  --paper: #{$paper};
+  --surface: #{$surface};
+  --ink: #{$ink};
+  --muted: #{$muted};
+  --line: #{$line};
+  --rule: #{$rule};
+  --photo-bg: #{$photo-bg};
+  --signal: #{$signal};
+  --tag-bg: #{$tag-bg};
+  --tag-ink: #{$tag-ink};
+  --control-border: #{$control-border};
+  --control-hover: #{$control-hover};
+  --control-active: #{$control-active};
+  --focus: #{$focus};
+}
+
+* {
+  box-sizing: border-box;
+}
+
+// Атрибут hidden має ховати елемент навіть тоді, коли блоку задано
+// display: без цього правила display переважив би hidden.
+[hidden] {
+  display: none !important;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: $font-text;
+  -webkit-tap-highlight-color: transparent;
+}
+
+// Рух — прикраса, а не спосіб передати зміст: за потреби його вимикають.
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

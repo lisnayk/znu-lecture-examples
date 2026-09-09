@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f3f1e9">
+<title>FRAME — Світло і простір</title>
+
+<!-- Браузер відкриває з'єднання з CDN зображень ще до того, як дійде до <img>. -->
+<link rel="preconnect" href="https://images.unsplash.com">
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<!--
+  ЯК ЧИТАТИ ЦЕЙ ФАЙЛ
+
+  Розмітка названа за БЕМ: блок — самостійна сутність (.gallery, .photo),
+  елемент — частина блоку (.photo__image), модифікатор — стан або варіант
+  (.photo--loading). Вкладених селекторів у стилях немає: кожен клас
+  описує себе сам.
+
+  Межа БЕМ-блоку — це майбутня межа компонента Vue. Тому перехід від цього
+  макета до компонентів механічний: блок стає файлом .vue, його дані —
+  props, його дії — emits. Коментарі нижче називають цю відповідність явно.
+
+  Атрибути data-role — гачки для скрипту. Класи відповідають лише за
+  вигляд, data-role — лише за поведінку. Перейменування класу не ламає
+  логіку, і навпаки. У Vue гачки зникають: шаблон сам зв'язує дані
+  з розміткою.
+-->
+
+<body class="page">
+<main class="page__main">
+
+  <!-- ══════════════════════════════════════════════════════════════
+       Блок .site-header → компонент SiteHeader.vue
+       Даних ззовні не потребує: статичний текст. Виносити його
+       в окремий компонент варто не заради повторного використання,
+       а щоб App.vue лишався оглядовим.
+       ══════════════════════════════════════════════════════════════ -->
+  <header class="site-header">
+    <div class="site-header__brand">FRAME<i class="site-header__mark" aria-hidden="true"></i></div>
+    <div class="site-header__meta">
+      <span class="micro site-header__note">Невелика колекція. Інший погляд.</span>
+      <!-- .badge — самостійний блок: він не знає, що лежить у шапці,
+           і тому може стояти будь-де. Це і є ознака блоку, а не елемента. -->
+      <span class="micro badge"><span class="badge__dot" aria-hidden="true"></span>Візуальний архів / 001</span>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       Блок .intro → компонент SiteIntro.vue
+       ══════════════════════════════════════════════════════════════ -->
+  <section class="intro">
+    <div class="intro__heading">
+      <p class="micro intro__eyebrow">Колекція 001 · Архітектура та природа</p>
+      <h1 class="intro__title">Світло <em>і</em> простір</h1>
+    </div>
+    <p class="intro__lead">Лінії, фактури й тихі моменти. Шість кадрів, які запрошують зупинитися та придивитись.</p>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       Блок .gallery → компонент Gallery.vue
+       props:  images (масив кадрів)
+       state:  selectedIndex — єдиний стан усієї сторінки
+       Усе інше похідне: поточний кадр обчислюється з images
+       і selectedIndex (у Vue — computed).
+
+       Gallery нічого не знає про те, звідки взялися кадри, і не
+       звертається до глобальних змінних. Два екземпляри Gallery
+       на сторінці мають незалежний стан саме тому.
+       ══════════════════════════════════════════════════════════════ -->
+  <section class="gallery" aria-label="Перегляд обраного кадру" data-role="gallery">
+
+    <!-- ── Блок .photo → компонент GalleryImage.vue ──────────────
+         props: image (об'єкт кадру)
+         Компонент без власних рішень: показує те, що передали,
+         і повідомляє про помилку завантаження. Модифікатори
+         .photo--loading і .photo--failed — його внутрішній стан,
+         а не стан галереї.
+
+         src і alt першого кадру стоять у розмітці навмисне:
+         браузер починає завантаження, не чекаючи скрипту.
+         width і height задають пропорцію 3:2 і прибирають
+         стрибок розкладки під час завантаження.
+         ─────────────────────────────────────────────────────── -->
+    <div class="photo" data-role="photo">
+      <img class="photo__image"
+           data-role="image"
+           width="1800" height="1200"
+           fetchpriority="high"
+           src="https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=1800&h=1200&q=85"
+           alt="Світла сучасна будівля з геометричними фасадами">
+      <span class="micro photo__mark">Вибраний кадр</span>
+      <span class="micro photo__label" aria-hidden="true">FRAME — A STUDY OF LIGHT &amp; SPACE</span>
+      <p class="photo__message" data-role="message" hidden>Кадр не завантажився. Перевірте підключення до мережі.</p>
+    </div>
+
+    <!-- ── Блок .details: колонка опису.
+         Це елемент розкладки галереї, а не окремий компонент:
+         сам по собі він нічого не означає. Усередині — два
+         самостійні блоки, кожен зі своїм майбутнім компонентом.
+         ─────────────────────────────────────────────────────── -->
+    <div class="gallery__details">
+
+      <!-- Блок .frame-info → компонент FrameInfo.vue
+           props: image, index, total. Власного стану немає —
+           чиста функція від входу. Такі компоненти найлегше
+           перевіряти й найважче зламати. -->
+      <article class="frame-info">
+        <p class="frame-info__counter">
+          <strong class="frame-info__number" data-role="number">01</strong>
+          <span class="frame-info__total">/ <span data-role="total">06</span></span>
+        </p>
+
+        <!-- aria-live: заголовок і опис змінюються без перезавантаження
+             сторінки, тож читач екрана має почути новий текст. -->
+        <div class="frame-info__live" aria-live="polite" aria-atomic="true">
+          <h2 class="frame-info__title" data-role="title">Геометрія тиші</h2>
+          <p class="frame-info__text" data-role="description">Чисті лінії, відкрите небо та ритм архітектури. Простір, у якому головною деталлю стає світло.</p>
+        </div>
+
+        <!-- Блок .tag-list → компонент TagList.vue
+             props: items. Список, а не набір <span>: перелік рівнозначних
+             підписів — це семантично список. -->
+        <ul class="tag-list">
+          <li class="tag-list__item" data-role="tag">Архітектура</li>
+          <li class="tag-list__item">Колекція 001</li>
+        </ul>
+      </article>
+
+      <!-- Блок .gallery-nav → компонент GalleryNavigation.vue
+           props: disabled (єдиний кадр — гортати нічого)
+           emits: previous, next
+
+           Компонент не змінює selectedIndex і навіть не знає про нього.
+           Він повідомляє про намір користувача, рішення ухвалює Gallery.
+           Дані рухаються вниз через props, наміри — вгору через події. -->
+      <div class="gallery-nav">
+        <div class="gallery-nav__rule"></div>
+        <div class="gallery-nav__controls">
+          <button class="gallery-nav__button" type="button" data-role="prev" aria-label="Попередній кадр">
+            <svg class="gallery-nav__icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 6l-6 6 6 6"/></svg>
+          </button>
+          <small class="gallery-nav__hint">Знайдіть свій ракурс</small>
+          <button class="gallery-nav__button" type="button" data-role="next" aria-label="Наступний кадр">
+            <svg class="gallery-nav__icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Порожній стан галереї. Макет, який показує лише вдалий випадок,
+       завжди прикрашає дійсність: порожній масив трапляється першим. -->
+  <p class="gallery-empty" data-role="empty" hidden>У цій колекції поки немає кадрів.</p>
+
+  <noscript>
+    <p class="gallery-empty">Для гортання колекції потрібен JavaScript. Перший кадр показано вище.</p>
+  </noscript>
+
+  <!-- Блок .site-footer → компонент SiteFooter.vue -->
+  <footer class="site-footer">
+    <span class="site-footer__brand">FRAME / Світло у звичайному.</span>
+    <span>Навчальний дизайн-макет · Фотографії: Unsplash · Потрібне підключення до мережі</span>
+  </footer>
+
+</main>
+
+<!-- defer: скрипт виконається після розбору розмітки, але не блокуватиме її. -->
+<script src="gallery.js" defer></script>
+</body>
+</html>
