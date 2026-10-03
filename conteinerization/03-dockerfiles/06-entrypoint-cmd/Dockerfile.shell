@@ -1,0 +1,4 @@
+# Shell-форма: команду обробляє /bin/sh -c, тому змінна підставляється.
+FROM alpine:3.24
+ENV GREETING=Привіт
+ENTRYPOINT echo $GREETING зі shell-форми

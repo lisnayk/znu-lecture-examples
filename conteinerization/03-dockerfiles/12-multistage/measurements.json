@@ -1,0 +1,6 @@
+{
+  "date": "2026-10-03",
+  "method": "docker image inspect .Size; MB = bytes / 1000000 rounded down by compare.sh",
+  "multistage": {"sizeBytes": 26089746, "id": "sha256:54a5f0713a4ea1b75501383b868b1680e8f0c78332fdba243cfd93532bd41a6f"},
+  "singlestage": {"sizeBytes": 61606651, "id": "sha256:aa322e17d12d0e7e57108267cac36ec8779a12f0b7f536ccf4b70ba91c46c2a7"}
+}

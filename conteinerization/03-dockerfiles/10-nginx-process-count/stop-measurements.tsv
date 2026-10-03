@@ -1,0 +1,13 @@
+form	run	elapsed_ms	exit_code	oom	kill_signals
+direct	1	327	0	false	15
+simple-shell	1	311	0	false	15
+wait-shell	1	5341	137	false	15,9
+explicit-shell	1	5334	137	false	15,9
+direct	2	296	0	false	15
+simple-shell	2	299	0	false	15
+wait-shell	2	5320	137	false	15,9
+explicit-shell	2	5375	137	false	15,9
+direct	3	341	0	false	15
+simple-shell	3	291	0	false	15
+wait-shell	3	5344	137	false	15,9
+explicit-shell	3	5370	137	false	15,9

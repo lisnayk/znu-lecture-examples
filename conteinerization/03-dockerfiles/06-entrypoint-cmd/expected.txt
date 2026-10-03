@@ -1,0 +1,11 @@
+1. Підстановка змінної середовища
+   shell: Привіт зі shell-форми
+   exec:  $GREETING з exec-форми
+
+2. Головний процес контейнера
+   ep-simple:1.0  PID 1: sleep 120
+   ep-loop:1.0    PID 1: /bin/sh -c while true; do sleep 1; done
+
+3. CMD задає аргументи за замовчуванням для ENTRYPOINT
+   без аргументів:        PING 127.0.0.1 (127.0.0.1): 56 data bytes
+   з аргументом ::1:      PING ::1 (::1): 56 data bytes

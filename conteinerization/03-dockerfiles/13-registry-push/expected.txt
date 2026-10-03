@@ -1,0 +1,6 @@
+docker <login> <--username> <student-example>
+docker <tag> <hello-image:1.0> <student-example/hello-image:1.0>
+docker <push> <student-example/hello-image:1.0>
+docker <login> <--username> <AWS> <--password-stdin> <123456789012.dkr.ecr.us-east-1.amazonaws.com>
+docker <tag> <hello-image:1.0> <123456789012.dkr.ecr.us-east-1.amazonaws.com/hello-image:1.0>
+docker <push> <123456789012.dkr.ecr.us-east-1.amazonaws.com/hello-image:1.0>

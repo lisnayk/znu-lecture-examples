@@ -1,0 +1,5 @@
+PASS 200 /
+PASS 200 /healthz
+PASS 404 /missing
+PASS процес працює від node, а не від root
+PASS HEALTHCHECK працює (healthy або starting)

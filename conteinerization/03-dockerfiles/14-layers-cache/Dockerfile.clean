@@ -1,0 +1,5 @@
+# Файл створено й видалено в межах одного шару, тому в образ він не потрапляє.
+FROM alpine:3.24
+RUN dd if=/dev/urandom of=/tmp/big.bin bs=1M count=40 \
+ && rm /tmp/big.bin
+CMD ["sh"]

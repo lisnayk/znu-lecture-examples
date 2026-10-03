@@ -1,0 +1,18 @@
+direct: 2
+nginx master
+nginx worker
+
+simple-shell: 2
+nginx master
+nginx worker
+
+wait-shell: 3
+nginx master
+nginx worker
+sh
+
+explicit-shell: 3
+nginx master
+nginx worker
+sh
+

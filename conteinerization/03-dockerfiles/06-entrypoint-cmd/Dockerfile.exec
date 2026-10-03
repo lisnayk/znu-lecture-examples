@@ -1,0 +1,4 @@
+# Exec-форма: оболонки немає, тому $GREETING лишається текстом.
+FROM alpine:3.24
+ENV GREETING=Привіт
+ENTRYPOINT ["echo", "$GREETING", "з exec-форми"]

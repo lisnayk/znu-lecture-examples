@@ -1,0 +1,14 @@
+direct: 1
+sleep
+
+simple-shell: 1
+sleep
+
+wait-shell: 2
+sh
+sleep
+
+explicit-shell: 2
+sh
+sleep
+

@@ -1,0 +1,4 @@
+# Ті самі пакети однією інструкцією RUN — один шар замість чотирьох.
+FROM alpine:3.24
+RUN apk add --no-cache curl jq git tzdata
+CMD ["sh"]

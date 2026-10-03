@@ -1,0 +1,5 @@
+# ENTRYPOINT задає програму, CMD — аргументи за замовчуванням.
+# Аргументи docker run замінюють CMD, але не ENTRYPOINT.
+FROM alpine:3.24
+ENTRYPOINT ["ping", "-c", "2"]
+CMD ["127.0.0.1"]

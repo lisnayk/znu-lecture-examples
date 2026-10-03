@@ -1,0 +1,12 @@
+none/none: no command specified
+none/exec: "tool" ["-b"]
+none/args: "-p" ["-q"]
+none/shell: "/bin/sh" ["-c","tool -b"]
+shell/none: "/bin/sh" ["-c","app -a"]
+shell/exec: "/bin/sh" ["-c","app -a","tool","-b"]
+shell/args: "/bin/sh" ["-c","app -a","-p","-q"]
+shell/shell: "/bin/sh" ["-c","app -a","/bin/sh","-c","tool -b"]
+exec/none: "app" ["-a"]
+exec/exec: "app" ["-a","tool","-b"]
+exec/args: "app" ["-a","-p","-q"]
+exec/shell: "app" ["-a","/bin/sh","-c","tool -b"]

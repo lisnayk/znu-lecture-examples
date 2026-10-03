@@ -1,0 +1,3 @@
+SIGTERM exit=0
+SIGINT exit=0
+SIGKILL exit=137

@@ -1,0 +1,5 @@
+$ docker run --rm ep-shell:1.0
+Привіт зі shell-форми
+
+$ docker run --rm ep-exec:1.0
+$GREETING з exec-форми
