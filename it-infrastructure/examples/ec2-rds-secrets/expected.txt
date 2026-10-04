@@ -1,0 +1,3 @@
+HTTP: OK
+DEMO: 5 stages, SQL fixture
+REFRESH: OK

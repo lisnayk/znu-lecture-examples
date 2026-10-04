@@ -1,0 +1,21 @@
+:root{--paper:#f3f0e7;--ink:#182823;--muted:#52635b;--line:#c9cfc3;--green:#236146;--red:#9c302c;--gold:#d7e785}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Georgia,"Times New Roman",serif}
+header,main{max-width:1180px;margin:auto;padding:0 36px}header{padding-top:28px;padding-bottom:22px;display:flex;justify-content:space-between;border-bottom:1px solid var(--line);font:13px "Courier New",monospace}
+main{display:grid;grid-template-columns:.9fr 1.1fr;gap:42px 70px;padding-top:54px}
+.eyebrow{text-transform:uppercase;letter-spacing:.12em;font:12px "Courier New",monospace;color:var(--muted);margin:0 0 18px}
+h1{font-weight:normal;letter-spacing:-.055em;font-size:clamp(40px,5vw,66px);line-height:1.04;margin:0 0 26px}
+.lead{font-size:19px;line-height:1.55;max-width:450px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:28px}
+button{border:1px solid var(--ink);background:var(--ink);color:var(--paper);padding:13px 16px;font:14px "Courier New",monospace;cursor:pointer}
+button.secondary{background:transparent;color:var(--ink)}button:hover{box-shadow:3px 3px 0 var(--gold)}button:disabled{opacity:.5;cursor:wait}button:focus-visible{outline:3px solid var(--green);outline-offset:4px}
+#summary,.small,#db-info{font:13px/1.6 "Courier New",monospace;color:var(--muted)}.notice{border-left:3px solid var(--green);padding:10px 15px;background:#e4ead9;font-size:16px;line-height:1.45}
+.stages{list-style:none;counter-reset:steps;margin:0;padding:0;border-top:1px solid var(--ink)}
+.stages li{counter-increment:steps;display:grid;grid-template-columns:40px 1fr auto;column-gap:12px;border-bottom:1px solid var(--line);padding:19px 0}
+.stages li:before{content:"0" counter(steps);font:13px "Courier New",monospace;color:var(--muted);padding-top:4px}
+.stage-title{font-size:21px}.stage-detail{grid-column:2/4;font:12px/1.65 "Courier New",monospace;overflow-wrap:anywhere;margin-top:7px;color:var(--muted)}
+.tag{font:11px "Courier New",monospace;text-transform:uppercase;align-self:center;border:1px solid var(--line);padding:4px 7px}
+li[data-status=ok] .tag{background:var(--gold);border-color:var(--gold)}li[data-status=error] .tag{background:var(--red);border-color:var(--red);color:white}
+.data{grid-column:1/-1;border-top:2px solid var(--ink);padding-top:25px;display:grid;grid-template-columns:.9fr 1.1fr;gap:70px}h2{font-weight:normal;font-size:28px;margin:0 0 16px}.small{max-width:360px}
+table{border-collapse:collapse;width:100%;text-align:left;font:14px/1.55 "Courier New",monospace}th,td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}th{font-size:11px;text-transform:uppercase;color:var(--muted)}th:first-child{width:48px}
+footer{grid-column:1/-1;display:flex;justify-content:space-between;gap:20px;padding:22px 0;border-top:1px solid var(--line);font:11px/1.6 "Courier New",monospace;color:var(--muted)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+@media(max-width:760px){header,main{padding-left:20px;padding-right:20px}main{grid-template-columns:1fr;gap:30px;padding-top:34px}.data{grid-template-columns:1fr;gap:14px}h1{font-size:46px}footer{flex-direction:column;gap:4px}.stage-title{font-size:19px}}
