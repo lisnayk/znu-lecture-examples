@@ -9,6 +9,7 @@
 
 - [Системи віртуалізації та контейнеризації](conteinerization/)
 - [Сучасні каркаси web-додатків](modern-frameworks/)
+- [IT-інфраструктура](it-infrastructure/)
 
 
 ---
