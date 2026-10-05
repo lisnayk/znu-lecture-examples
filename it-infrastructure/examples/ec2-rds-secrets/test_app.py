@@ -32,9 +32,10 @@ class Connection:
     def __init__(self):
         self.closed = False
         self.query_error = None
+        self.pgconn = Mock(ssl_in_use=True)
     def execute(self, query):
         cursor = Mock()
-        if "pg_stat_ssl" in query:
+        if "current_database()" in query:
             cursor.fetchone.return_value = {"name": "infrastructure", "username": "ec2_rds_app",
                                           "ssl": True, "tls_version": "TLSv1.3"}
         else:
@@ -65,6 +66,22 @@ class DiagnosticsTest(unittest.TestCase):
         self.assertEqual(self.connect.call_args.kwargs["sslmode"], "verify-full")
         self.assertEqual(self.connect.call_args.kwargs["password"], self.aws.password)
         self.assertTrue(self.db.closed)
+
+    def test_proxy_uses_client_tls_and_avoids_startup_options(self):
+        from dataclasses import replace
+        self.service.settings = replace(self.service.settings, target="proxy")
+        result = self.service.snapshot()
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["database"]["tls_peer"], "RDS Proxy")
+        self.assertEqual(result["target"], "proxy")
+        self.assertNotIn("options", self.connect.call_args.kwargs)
+        self.assertIsNone(self.connect.call_args.kwargs["prepare_threshold"])
+
+    def test_client_tls_is_required_even_if_server_fixture_claims_ssl(self):
+        self.db.pgconn.ssl_in_use = False
+        result = self.service.snapshot()
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["stages"][3]["status"], "error")
 
     def test_cache_expiry_and_explicit_refresh(self):
         self.service.snapshot()

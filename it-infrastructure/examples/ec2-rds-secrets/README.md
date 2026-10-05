@@ -1,4 +1,4 @@
-# EC2 → Secrets Manager → RDS PostgreSQL
+# EC2 → Secrets Manager → RDS Proxy / RDS PostgreSQL
 
 Застосунок показує п'ять етапів доступу до бази. AWS SDK отримує тимчасові
 credentials ролі EC2, читає пароль із Secrets Manager і передає його драйверу
@@ -11,10 +11,18 @@ PostgreSQL. Тут використовується парольна автен�
 IAM-роль дає доступ до секрета; SQL-права користувача дають доступ до таблиці.
 IAM database authentication у цьому прикладі не вмикають.
 
+## Маршрут через RDS Proxy
+
+Основний user-data.sh тепер налаштовано на DB_TARGET=proxy.
+[Налаштування RDS Proxy та схема архітектури](PROXY.md) описують окрему роль
+проксі, security groups, TLS і порядок переходу з прямого маршруту.
+Наведені нижче кроки готують базу, секрет і роль EC2; параметри проксі
+налаштовують за PROXY.md.
+
 ## Локальний перегляд
 
 ~~~bash
-python3 app.py --demo --port 8766
+python3 app.py --demo --demo-target proxy --port 8766
 ~~~
 
 Відкрити http://localhost:8766. Деморежим не потребує бібліотек, AWS або БД.
@@ -84,7 +92,7 @@ USAGE на схемі та SELECT на таблиці. Адміністрати�
 лише для підготовки; застосунок працює як ec2_rds_app.
 
 Клієнт завжди використовує sslmode=verify-full. Перевіряються ланцюжок
-сертифіката й ім'я сервера, тому DB_HOST має бути endpoint RDS.
+сертифіката й ім'я сервера, тому DB_HOST має бути endpoint RDS у прямому режимі або endpoint RDS Proxy у режимі proxy.
 [TLS для RDS PostgreSQL](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/PostgreSQL.Concepts.General.SSL.html).
 
 ## 3. Секрет
@@ -139,12 +147,17 @@ Boto3 сам отримує й оновлює credentials instance profile.
 ## 5. Запуск із Git
 
 У user-data.sh заповнити AWS_REGION, DB_SECRET_ARN, DB_HOST і за потреби DB_NAME.
+Для прямого маршруту задати DB_TARGET=direct та endpoint RDS.
+Для основного маршруту залишити DB_TARGET=proxy, створити проксі за PROXY.md
+та вказати його endpoint.
 У скрипті вже вказано публічний репозиторій та шлях застосунку.
 GIT_REF можна замінити повним SHA коміту для відтворюваного запуску.
 
 Створити EC2 з Ubuntu 24.04 LTS, підготовленою роллю та security group.
 Передати скрипт як user data. Він завантажує код із Git, встановлює бібліотеки
-в окреме venv, завантажує CA bundle та запускає службу ec2-rds-secrets на порту 80.
+в окреме venv, готує CA bundle та запускає службу ec2-rds-secrets на порту 80.
+Прямий режим використовує RDS CA bundle; режим proxy використовує системні
+CA для сертифіката ACM.
 Конфігурація зберігається в /etc/ec2-rds-secrets.env; у ній немає пароля або
 AWS keys. Приклад заповнення міститься в config.env.example.
 
@@ -221,7 +234,7 @@ test_integration.py перевіряє справжній PostgreSQL через 
 демо endpoints, snapshots, role та policies, якщо вони більше не потрібні.
 Для RDS окремо перевірити збережені snapshots і automated backups.
 Видалення instance не гарантує видалення всіх платних ресурсів.
-RDS, EC2, Secrets Manager, endpoints і NAT можуть оплачуватися окремо.
+RDS, RDS Proxy, EC2, Secrets Manager, endpoints і NAT можуть оплачуватися окремо.
 
 Документацію AWS перевірено 04.10.2026. Запуск на справжніх EC2 і RDS
 потребує перевірки в навчальному AWS-акаунті.

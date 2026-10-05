@@ -12,7 +12,13 @@ ROOT = Path(__file__).resolve().parent
 
 
 class BootstrapTest(unittest.TestCase):
-    def test_git_source_pinned_revision_repeat_and_dirty_protection(self):
+    def test_proxy_bootstrap(self):
+        self.check_bootstrap("proxy")
+
+    def test_direct_bootstrap(self):
+        self.check_bootstrap("direct")
+
+    def check_bootstrap(self, target_mode):
         with tempfile.TemporaryDirectory(prefix="ec2-bootstrap-") as temporary:
             temp = Path(temporary)
             remote, base, commands = temp / "remote", temp / "installation", temp / "bin"
@@ -75,7 +81,8 @@ class BootstrapTest(unittest.TestCase):
             script = script.replace("http://127.0.0.1/healthz", "http://127.0.0.1:" + str(port) + "/healthz")
             script = script.replace('DB_SECRET_ARN="REPLACE_WITH_FULL_SECRET_ARN"',
                                     'DB_SECRET_ARN="arn:aws:secretsmanager:eu-central-1:123456789012:secret:fixture-ABCDEF"')
-            script = script.replace('DB_HOST="REPLACE_WITH_RDS_ENDPOINT"', 'DB_HOST="db.example"')
+            script = script.replace('DB_HOST="REPLACE_WITH_PROXY_ENDPOINT"', 'DB_HOST="db.example"')
+            script = script.replace('DB_TARGET="proxy"', 'DB_TARGET="' + target_mode + '"')
             script = script.replace('CONFIG="/etc/ec2-rds-secrets.env"', 'CONFIG="' + str(temp / "config.env") + '"')
             script = script.replace("source /etc/os-release", 'ID=ubuntu; VERSION_ID=24.04')
             bootstrap = temp / "user-data.sh"

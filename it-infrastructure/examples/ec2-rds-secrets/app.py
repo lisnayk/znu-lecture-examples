@@ -27,6 +27,7 @@ class Settings:
     database: str
     ca_file: str
     port: int = 5432
+    target: str = "direct"
 
     @classmethod
     def from_env(cls):
@@ -40,7 +41,10 @@ class Settings:
             raise SafeError("DB_PORT має бути числом.") from None
         if not 1 <= port <= 65535 or not Path(values[4]).is_file():
             raise SafeError("Перевірте DB_PORT та шлях до сертифіката CA.")
-        return cls(*values, port=port)
+        target = os.environ.get("DB_TARGET", "direct")
+        if target not in ("direct", "proxy") or (target == "proxy" and port != 5432):
+            raise SafeError("DB_TARGET має бути direct або proxy; PostgreSQL Proxy використовує порт 5432.")
+        return cls(*values, port=port, target=target)
 
 
 class AwsAccess:
@@ -93,7 +97,7 @@ def db_hint(error):
         "3D000": "Базу не знайдено. Перевірте DB_NAME.",
         "57014": "Запит перевищив дозволений час виконання.",
     }.get(getattr(error, "sqlstate", None),
-          "Перевірте endpoint, сертифікат CA, TLS і доступність PostgreSQL.")
+          "Перевірте endpoint, CA/TLS, стан target проксі та доступність PostgreSQL.")
 
 
 def connect_postgres(**kwargs):
@@ -136,8 +140,9 @@ class Diagnostics:
             host=config.host, port=config.port, dbname=config.database,
             user=credentials["username"], password=credentials["password"],
             sslmode="verify-full", sslrootcert=config.ca_file, connect_timeout=5,
+            sslnegotiation="postgres", max_protocol_version="3.0",
             application_name="ec2-rds-secrets-demo", autocommit=True,
-            options="-c statement_timeout=5000 -c default_transaction_read_only=on")
+            prepare_threshold=None)
 
     def snapshot(self, refresh=False):
         with self.lock:
@@ -145,10 +150,10 @@ class Diagnostics:
                       for key, title in (
                           ("identity", "Роль EC2"),
                           ("secret", "Secrets Manager"),
-                          ("network", "TCP до RDS"),
+                          ("network", "TCP до RDS Proxy" if self.settings.target == "proxy" else "TCP до RDS"),
                           ("database", "TLS та вхід у PostgreSQL"),
                           ("query", "Читання таблиці"))]
-            result = {"mode": "aws", "checked_at": datetime.now(timezone.utc).isoformat(),
+            result = {"mode": "aws", "target": self.settings.target, "checked_at": datetime.now(timezone.utc).isoformat(),
                       "stages": stages, "records": [], "database": None,
                       "cache_seconds": 0, "credential_reloaded": False, "ok": False}
             def passed(index, detail):
@@ -189,14 +194,14 @@ class Diagnostics:
                     except Exception as refresh_error:
                         return failed(1, aws_hint(refresh_error))
                     connection = self.connect(credentials)
+                # Через проксі pg_stat_ssl описує інший сегмент, а не TLS клієнта.
+                if not connection.pgconn.ssl_in_use:
+                    raise SafeError("Клієнтське з'єднання не підтвердило використання TLS.")
                 info = connection.execute(
-                    "SELECT current_database() AS name, current_user AS username, "
-                    "ssl, version AS tls_version FROM pg_stat_ssl "
-                    "WHERE pid = pg_backend_pid()").fetchone()
-                if not info or not info["ssl"]:
-                    raise SafeError("З'єднання не підтвердило використання TLS.")
-                result["database"] = dict(info)
-                passed(3, "verify-full: перевірено CA та ім'я сервера.")
+                    "SELECT current_database() AS name, current_user AS username").fetchone()
+                result["database"] = {**dict(info), "ssl": True, "tls_mode": "verify-full",
+                                      "tls_peer": "RDS Proxy" if self.settings.target == "proxy" else "RDS"}
+                passed(3, "Клієнтський TLS: verify-full, перевірено CA та ім'я endpoint.")
             except Exception as error:
                 if connection is not None:
                     connection.close()
@@ -215,18 +220,22 @@ class Diagnostics:
 
 
 class Demo:
+    def __init__(self, target="proxy"):
+        self.target = target
+
     def snapshot(self, refresh=False):
         return {
-            "mode": "demo", "checked_at": datetime.now(timezone.utc).isoformat(), "ok": True,
+            "mode": "demo", "target": self.target, "checked_at": datetime.now(timezone.utc).isoformat(), "ok": True,
             "cache_seconds": TTL, "credential_reloaded": False,
             "database": {"name": "infrastructure", "username": "ec2_rds_app",
-                         "ssl": True, "tls_version": "TLSv1.3"},
+                         "ssl": True, "tls_mode": "verify-full",
+                         "tls_peer": "RDS Proxy" if self.target == "proxy" else "RDS"},
             "records": [{"id": 1, "message": "Навчальний запис. У деморежимі AWS і БД не викликаються."}],
             "stages": [{"id": key, "title": title, "status": "ok", "detail": detail}
                        for key, title, detail in (
                            ("identity", "Роль EC2", "Імітація ролі ec2-rds-demo"),
                            ("secret", "Secrets Manager", "Імітація AWSCURRENT"),
-                           ("network", "TCP до RDS", "Імітація мережевого з'єднання"),
+                           ("network", "TCP до RDS Proxy" if self.target == "proxy" else "TCP до RDS", "Імітація мережевого з'єднання"),
                            ("database", "TLS та вхід у PostgreSQL", "Імітація verify-full"),
                            ("query", "Читання таблиці", "Імітація SELECT"))]}
 
@@ -279,11 +288,12 @@ def handler_for(service):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--demo", action="store_true")
+    parser.add_argument("--demo-target", choices=("direct", "proxy"), default="proxy")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8766)
     args = parser.parse_args()
     try:
-        service = Demo() if args.demo else Diagnostics(Settings.from_env())
+        service = Demo(args.demo_target) if args.demo else Diagnostics(Settings.from_env())
     except SafeError as error:
         parser.error(str(error))
     server = ThreadingHTTPServer((args.host, args.port), handler_for(service))

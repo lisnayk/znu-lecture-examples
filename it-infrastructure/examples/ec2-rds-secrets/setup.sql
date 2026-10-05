@@ -3,6 +3,9 @@
 \set ON_ERROR_STOP on
 CREATE ROLE ec2_rds_app LOGIN;
 \password ec2_rds_app
+-- Налаштування задаються до створення пулу; клієнт не надсилає SET через проксі.
+ALTER ROLE ec2_rds_app SET statement_timeout = '5s';
+ALTER ROLE ec2_rds_app SET default_transaction_read_only = on;
 CREATE SCHEMA demo;
 CREATE TABLE demo.messages (
     id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

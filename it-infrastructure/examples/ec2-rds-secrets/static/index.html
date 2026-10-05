@@ -9,8 +9,8 @@
   <header><span>IT-інфраструктура / AWS</span><span id="mode">Перевірка</span></header>
   <main>
     <section class="intro"><p class="eyebrow">Ланцюжок доступу</p>
-      <h1>Від ролі EC2<br>до рядка в базі.</h1>
-      <p class="lead">Застосунок отримує пароль із Secrets Manager і відкриває з’єднання з PostgreSQL через TLS.</p>
+      <h1>Від ролі EC2<br>через Proxy до бази.</h1>
+      <p class="lead">Застосунок отримує пароль із Secrets Manager і підключається до PostgreSQL через RDS Proxy і TLS.</p>
       <div class="actions"><button id="check">Перевірити зв’язок</button><button id="refresh" class="secondary">Перечитати секрет</button></div>
       <p id="summary" role="status" aria-live="polite">Очікуємо результати перевірки…</p>
       <p id="demo-note" class="notice" hidden>Деморежим. Результати імітуються; AWS і база даних не викликаються.</p>

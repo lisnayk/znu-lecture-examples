@@ -10,7 +10,8 @@ APP_SUBDIR="it-infrastructure/examples/ec2-rds-secrets"
 
 AWS_REGION="eu-central-1"
 DB_SECRET_ARN="REPLACE_WITH_FULL_SECRET_ARN"
-DB_HOST="REPLACE_WITH_RDS_ENDPOINT"
+DB_HOST="REPLACE_WITH_PROXY_ENDPOINT"
+DB_TARGET="proxy"
 DB_NAME="infrastructure"
 DB_PORT="5432"
 
@@ -18,11 +19,13 @@ if [[ "$DB_SECRET_ARN" == REPLACE_* || "$DB_HOST" == REPLACE_* ]]; then
   printf 'Заповніть DB_SECRET_ARN і DB_HOST перед запуском EC2.\n' >&2
   exit 1
 fi
-for value in "$AWS_REGION" "$DB_SECRET_ARN" "$DB_HOST" "$DB_NAME" "$DB_PORT"; do
+for value in "$AWS_REGION" "$DB_SECRET_ARN" "$DB_HOST" "$DB_NAME" "$DB_PORT" "$DB_TARGET"; do
   [[ "$value" =~ ^[A-Za-z0-9_.:/@-]+$ ]] || { printf 'Некоректна конфігурація.\n' >&2; exit 1; }
 done
 [[ "$DB_SECRET_ARN" == arn:aws:secretsmanager:"$AWS_REGION":* ]]
 [[ "$DB_PORT" =~ ^[0-9]+$ && "$DB_PORT" -ge 1 && "$DB_PORT" -le 65535 ]]
+[[ "$DB_TARGET" == direct || "$DB_TARGET" == proxy ]]
+[[ "$DB_TARGET" != proxy || "$DB_PORT" == 5432 ]]
 [[ "$REPO_URL" == https://* && -n "$GIT_REF" && "$GIT_REF" != -* ]]
 [[ "$APP_SUBDIR" != /* && "$APP_SUBDIR" != *..* && -n "$APP_SUBDIR" ]]
 
@@ -53,15 +56,20 @@ for file in app.py requirements.txt ec2-rds-secrets.service static/index.html st
 done
 python3 -m venv "$BASE/venv"
 "$BASE/venv/bin/python" -m pip install --disable-pip-version-check -r "$APP/requirements.txt"
-curl --fail --silent --show-error --retry 3 \
-  https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem \
-  -o "$BASE/global-bundle.pem.new"
-install -m 644 "$BASE/global-bundle.pem.new" "$BASE/global-bundle.pem"
-rm "$BASE/global-bundle.pem.new"
+if [[ "$DB_TARGET" == proxy ]]; then
+  # Proxy використовує ACM. Довіряємо актуальному системному CA bundle.
+  install -m 644 /etc/ssl/certs/ca-certificates.crt "$BASE/db-ca-bundle.pem"
+else
+  curl --fail --silent --show-error --retry 3 \
+    https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem \
+    -o "$BASE/db-ca-bundle.pem.new"
+  install -m 644 "$BASE/db-ca-bundle.pem.new" "$BASE/db-ca-bundle.pem"
+  rm "$BASE/db-ca-bundle.pem.new"
+fi
 
 printf '%s\n' \
   "AWS_REGION=$AWS_REGION" "DB_SECRET_ARN=$DB_SECRET_ARN" "DB_HOST=$DB_HOST" \
-  "DB_NAME=$DB_NAME" "DB_PORT=$DB_PORT" "DB_SSLROOTCERT=$BASE/global-bundle.pem" > "$CONFIG"
+  "DB_NAME=$DB_NAME" "DB_PORT=$DB_PORT" "DB_TARGET=$DB_TARGET" "DB_SSLROOTCERT=$BASE/db-ca-bundle.pem" > "$CONFIG"
 chmod 600 "$CONFIG"
 ln -sfnT "$APP" "$BASE/current"
 install -m 644 "$APP/ec2-rds-secrets.service" /etc/systemd/system/ec2-rds-secrets.service

@@ -2,7 +2,13 @@ const byId = id => document.getElementById(id);
 const buttons = [byId('check'), byId('refresh')];
 const labels = {ok:'Пройдено', error:'Помилка', waiting:'Очікування', skipped:'Пропущено'};
 function render(data) {
-  byId('mode').textContent = data.mode === 'demo' ? 'Локальне демо' : 'Secrets Manager + роль EC2';
+  const route = data.target === 'proxy' ? 'EC2 → RDS Proxy → RDS' : 'EC2 → RDS';
+  byId('mode').textContent = (data.mode === 'demo' ? 'Демо · ' : '') + route;
+  document.querySelector('.intro h1').textContent = data.target === 'proxy'
+    ? 'Від ролі EC2 через Proxy до бази.' : 'Від ролі EC2 до рядка в базі.';
+  document.querySelector('.lead').textContent = data.target === 'proxy'
+    ? 'Застосунок отримує пароль із Secrets Manager і підключається до PostgreSQL через RDS Proxy і TLS.'
+    : 'Застосунок отримує пароль із Secrets Manager і відкриває з’єднання з PostgreSQL через TLS.';
   byId('demo-note').hidden = data.mode !== 'demo';
   byId('summary').textContent = data.ok
     ? 'Усі етапи пройдено. Кеш секрета: ще ' + data.cache_seconds + ' с.' + (data.credential_reloaded ? ' Після відхиленого пароля секрет перечитано.' : '')
@@ -16,7 +22,7 @@ function render(data) {
     return li;
   }));
   byId('db-info').textContent = data.database
-    ? data.database.name + ' / ' + data.database.username + ' / ' + data.database.tls_version
+    ? data.database.name + ' / ' + data.database.username + ' / ' + 'TLS / ' + data.database.tls_peer + ' / ' + data.database.tls_mode
     : 'З’єднання не підтверджено.';
   const rows = data.records.map(record => {
     const tr = document.createElement('tr');
