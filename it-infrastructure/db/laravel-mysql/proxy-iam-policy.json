@@ -1,0 +1,20 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "secretsmanager:GetSecretValue",
+      "Resource": "REPLACE_WITH_FULL_SECRET_ARN"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "kms:Decrypt",
+      "Resource": "REPLACE_WITH_SECRET_KMS_KEY_ARN",
+      "Condition": {
+        "StringEquals": {
+          "kms:ViaService": "secretsmanager.REPLACE_WITH_REGION.amazonaws.com"
+        }
+      }
+    }
+  ]
+}

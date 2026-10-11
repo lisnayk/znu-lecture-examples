@@ -1,0 +1,15 @@
+[Unit]
+Description=Laravel MySQL schema migrations
+Wants=network-online.target
+After=network-online.target
+Before=nginx.service php8.3-fpm.service
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/ec2-laravel/current
+Environment=AWS_EC2_METADATA_V1_DISABLED=true
+ExecStart=/bin/bash /opt/ec2-laravel/current/start.sh --migrate-only
+RemainAfterExit=yes
+[Install]
+WantedBy=multi-user.target
