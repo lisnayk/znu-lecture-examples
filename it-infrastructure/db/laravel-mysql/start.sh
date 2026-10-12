@@ -1,6 +1,7 @@
 #!/bin/bash
 set -Eeuo pipefail
 cd "$(dirname "$0")"
+php artisan infra:prepare-database --no-interaction
 php artisan migrate --force --no-interaction
 if [[ "${1:-}" == --migrate-only ]]; then
   exit 0

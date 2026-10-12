@@ -53,6 +53,19 @@ class MySqlIntegrationTest extends TestCase
         $this->assertNull(Service::find($service->id));
     }
 
+    public function test_creation_and_migration_of_a_database_with_a_hyphen(): void
+    {
+        config(['database.connections.mysql.database' => 'lecture_test-dash',
+            'infrastructure.create_database' => true]);
+        DB::purge('mysql');
+        $this->artisan('infra:prepare-database')->assertSuccessful();
+        $this->artisan('migrate', ['--force' => true])->assertSuccessful();
+        $service = Service::create(['name' => 'Database name fixture', 'environment' => 'staging', 'status' => 'healthy']);
+        $this->artisan('infra:prepare-database')->assertSuccessful();
+        $this->assertSame('Database name fixture', $service->fresh()->name);
+        $service->delete();
+    }
+
     public function test_untrusted_ca_prevents_connection(): void
     {
         config(['infrastructure.ca_file' => getenv('MYSQL_TEST_WRONG_CA')]);

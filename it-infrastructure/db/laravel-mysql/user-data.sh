@@ -11,13 +11,15 @@ AWS_REGION="us-east-1"
 DB_HOST="REPLACE_WITH_MYSQL_PROXY_ENDPOINT"
 DB_SECRET_ARN="REPLACE_WITH_SECRET_ARN"
 DB_DATABASE="infrastructure"
+DB_CREATE_IF_MISSING="false"
 
 [[ "$DB_HOST" != REPLACE_* && "$DB_SECRET_ARN" != REPLACE_* ]]
-for value in "$AWS_REGION" "$DB_HOST" "$DB_SECRET_ARN" "$DB_DATABASE"; do
-  [[ "$value" =~ ^[A-Za-z0-9_.:/@-]+$ ]]
-done
+[[ "$AWS_REGION" =~ ^[a-z]{2}(-[a-z]+)+-[0-9]+$ ]]
+[[ "$DB_HOST" =~ ^[A-Za-z0-9.-]+$ ]]
+[[ "$DB_SECRET_ARN" =~ ^[A-Za-z0-9_!:/+=.@-]+$ ]]
 [[ "$DB_SECRET_ARN" == arn:aws:secretsmanager:"$AWS_REGION":* ]]
-[[ "$DB_DATABASE" =~ ^[A-Za-z0-9_]+$ ]]
+[[ "$DB_DATABASE" =~ ^[A-Za-z0-9_-]{1,64}$ ]]
+[[ "$DB_CREATE_IF_MISSING" == true || "$DB_CREATE_IF_MISSING" == false ]]
 [[ "$REPO_URL" == https://* && "$GIT_REF" != -* && -n "$GIT_REF" ]]
 [[ "$APP_SUBDIR" != /* && "$APP_SUBDIR" != *..* ]]
 source /etc/os-release
@@ -79,6 +81,7 @@ DB_AUTH_MODE=secrets
 DB_HOST=$DB_HOST
 DB_PORT=3306
 DB_DATABASE=$DB_DATABASE
+DB_CREATE_IF_MISSING=$DB_CREATE_IF_MISSING
 DB_USERNAME=
 DB_PASSWORD=
 AWS_REGION=$AWS_REGION

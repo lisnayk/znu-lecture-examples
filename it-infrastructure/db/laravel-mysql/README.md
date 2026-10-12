@@ -14,7 +14,7 @@ AWS SDK читає пароль із Secrets Manager за допомогою ins
 
 ## Міграції при старті
 
-start.sh спочатку виконує php artisan migrate --force --no-interaction.
+start.sh виконує infra:prepare-database, а потім php artisan migrate --force --no-interaction.
 Лише після успішної міграції запускається локальний вебсервер.
 На EC2 міграцію запускає ec2-laravel-migrate.service перед PHP-FPM і Nginx.
 Служби вебсервера залежать від успішного завершення міграції.
@@ -25,6 +25,20 @@ Laravel створює таблиці migrations і services. Повторний
 наявні записи не очищуються. Для нового релізу на EC2 bootstrap повторно
 запускає migration service перед вебсервером.
 Цей стенд розраховано на один EC2.
+
+DB_CREATE_IF_MISSING=true вмикає створення відсутньої SQL-бази перед міграціями.
+Потрібне право CREATE DATABASE для заданої назви. За замовчуванням цей крок
+вимкнено, і база має бути створена через setup.sql.
+Повторний крок використовує CREATE DATABASE IF NOT EXISTS та не очищує дані.
+Назва БД може містити дефіс; у SQL вона береться в зворотні лапки.
+[Ідентифікатори MySQL](https://dev.mysql.com/doc/refman/8.4/en/identifiers.html).
+
+DB_DATABASE є назвою SQL-бази всередині MySQL. Ім'я інстанса RDS
+не створює автоматично SQL-базу з такою самою назвою.
+Повний ARN секрету може містити !, зокрема в керованих RDS секретах rds!db.
+Вони зазвичай містять master credentials; для окремого користувача
+з обмеженими правами використати його власний секрет.
+[Керовані RDS credentials](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-secrets-manager.html).
 
 ## Локальний запуск із MySQL
 
@@ -159,7 +173,8 @@ RDS та проксі залишаються приватними; проксі 
 ## 5. Автоматичне розгортання EC2 з Git
 
 У user-data.sh заповнити AWS_REGION, DB_HOST endpoint проксі,
-DB_SECRET_ARN та DB_DATABASE. Пароля або AWS keys у скрипті немає.
+DB_SECRET_ARN та DB_DATABASE. За потреби задати DB_CREATE_IF_MISSING=true.
+Пароля або AWS keys у скрипті немає.
 GIT_REF можна задати повним SHA опублікованого коміту.
 
 Передати скрипт як user data новому EC2 Ubuntu 24.04 LTS з підготовленою роллю.
