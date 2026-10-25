@@ -6,6 +6,7 @@ use App\Exceptions\InfrastructureUnavailable;
 use App\Services\SecretCredentials;
 use Illuminate\Database\Connectors\MySqlConnector;
 use PDO;
+use PDOException;
 use Throwable;
 
 class SecretsMySqlConnector extends MySqlConnector
@@ -32,6 +33,8 @@ class SecretsMySqlConnector extends MySqlConnector
         $config['options'][PDO::ATTR_EMULATE_PREPARES] = false;
         try {
             return parent::connect($config);
+        } catch (PDOException $error) {
+            throw InfrastructureUnavailable::fromPdo($error);
         } catch (Throwable) {
             throw new InfrastructureUnavailable('MySQL-з’єднання відхилено. Перевірте endpoint, target проксі, порт 3306, SG, CA та облікові дані.');
         }

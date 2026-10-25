@@ -215,6 +215,15 @@ sudo tail -n 50 /var/log/cloud-init-output.log
 Якщо міграція відхилена через IAM, мережу, пароль або SQL-права,
 виправити причину та повторити старт migration service.
 
+Команда infra:prepare-database виводить окремі повідомлення для відсутніх
+облікових даних ролі EC2, помилок Secrets Manager та MySQL.
+Для MySQL журнал містить SQLSTATE і числовий код драйвера з позначенням
+MySQL connection або CREATE DATABASE. Початковий текст винятку, SQL,
+пароль і вміст секрета не виводяться. HTTP-відповідь залишається загальною.
+
+Після оновлення лише PHP-коду достатньо повторити запуск служби;
+для зміни параметрів .env спочатку оновити Laravel config cache.
+
 ~~~bash
 sudo systemctl restart ec2-laravel-migrate
 sudo systemctl start php8.3-fpm nginx

@@ -2,9 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Exceptions\InfrastructureUnavailable;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use PDOException;
 use Throwable;
 
 #[Signature('infra:prepare-database')]
@@ -36,6 +38,14 @@ class PrepareDatabase extends Command
         try {
             $connection = app('db.connector.mysql')->connect($settings);
             $connection->exec('CREATE DATABASE IF NOT EXISTS '.$this->quoteName($name).' CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+        } catch (InfrastructureUnavailable $error) {
+            $this->error($error->getMessage());
+
+            return self::FAILURE;
+        } catch (PDOException $error) {
+            $this->error(InfrastructureUnavailable::fromPdo($error, 'CREATE DATABASE')->getMessage());
+
+            return self::FAILURE;
         } catch (Throwable) {
             $this->error('Не вдалося підготувати MySQL-базу. Перевірте роль, секрет, target проксі, TLS та право CREATE DATABASE.');
 

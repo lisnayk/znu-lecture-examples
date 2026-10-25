@@ -6,6 +6,7 @@ use App\Exceptions\InfrastructureUnavailable;
 use App\Services\SecretCredentials;
 use Aws\Command;
 use Aws\Exception\AwsException;
+use Aws\Exception\CredentialsException;
 use Aws\MockHandler;
 use Aws\Result;
 use Aws\SecretsManager\SecretsManagerClient;
@@ -60,5 +61,50 @@ class SecretCredentialsTest extends TestCase
         $handler = new MockHandler([new AwsException('private credential content', new Command('GetSecretValue'))]);
         $this->app->instance(SecretsManagerClient::class, $this->client($handler));
         $this->get('/')->assertStatus(503)->assertSee('тимчасово недоступний')->assertDontSee('private credential content');
+    }
+
+    public function test_known_aws_error_codes_are_preserved_without_response_content(): void
+    {
+        config(['infrastructure.secret_arn' => 'arn:aws:secretsmanager:us-east-1:123456789012:secret:fixture']);
+        foreach (['AccessDeniedException', 'ResourceNotFoundException', 'DecryptionFailure', 'InvalidRequestException'] as $code) {
+            $original = new AwsException('private-credentials', new Command('GetSecretValue'), ['code' => $code]);
+            $handler = new MockHandler([$original]);
+            try {
+                (new SecretCredentials($this->client($handler)))->get();
+                $this->fail('Expected safe infrastructure failure.');
+            } catch (InfrastructureUnavailable $error) {
+                $this->assertStringContainsString($code, $error->getMessage());
+                $this->assertStringNotContainsString('private-credentials', $error->getMessage());
+                $this->assertNull($error->getPrevious());
+            }
+        }
+    }
+
+    public function test_missing_instance_credentials_have_a_separate_safe_diagnostic(): void
+    {
+        config(['infrastructure.secret_arn' => 'arn:aws:secretsmanager:us-east-1:123456789012:secret:fixture']);
+        $handler = new MockHandler([new CredentialsException('private-credentials')]);
+        try {
+            (new SecretCredentials($this->client($handler)))->get();
+            $this->fail('Expected safe infrastructure failure.');
+        } catch (InfrastructureUnavailable $error) {
+            $this->assertStringContainsString('EC2 credentials:', $error->getMessage());
+            $this->assertStringNotContainsString('private-credentials', $error->getMessage());
+            $this->assertNull($error->getPrevious());
+        }
+    }
+
+    public function test_unknown_aws_error_code_does_not_reach_the_diagnostic(): void
+    {
+        config(['infrastructure.secret_arn' => 'arn:aws:secretsmanager:us-east-1:123456789012:secret:fixture']);
+        $handler = new MockHandler([new AwsException('private-response', new Command('GetSecretValue'), ['code' => 'private-code'])]);
+        try {
+            (new SecretCredentials($this->client($handler)))->get();
+            $this->fail('Expected safe infrastructure failure.');
+        } catch (InfrastructureUnavailable $error) {
+            $this->assertStringContainsString('Secrets Manager:', $error->getMessage());
+            $this->assertStringNotContainsString('private-response', $error->getMessage());
+            $this->assertStringNotContainsString('private-code', $error->getMessage());
+        }
     }
 }
