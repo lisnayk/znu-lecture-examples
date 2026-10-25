@@ -38,6 +38,8 @@ systemctl stop nginx php8.3-fpm
 BASE="/opt/ec2-laravel"
 CHECKOUT="$BASE/repository"
 mkdir -p "$BASE"
+export COMPOSER_HOME="$BASE/.composer"
+install -d -m 700 "$COMPOSER_HOME"
 if [[ ! -e "$CHECKOUT" ]]; then
   git clone --depth 1 "$REPO_URL" "$CHECKOUT"
 fi

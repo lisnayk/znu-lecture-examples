@@ -182,6 +182,20 @@ Bootstrap завантажує код, перевіряє інсталятор C
 з lock-файла, генерує APP_KEY і створює .env з правами root:www-data 640.
 APP_KEY зберігається при повторному розгортанні. Пароль БД у .env порожній.
 
+Cloud-init може запускати скрипт без HOME. Bootstrap явно задає
+COMPOSER_HOME=/opt/ec2-laravel/.composer до запуску інсталятора й Composer.
+Каталог має права 700. Якщо попередня версія скрипта зупинилася з повідомленням
+«The HOME or COMPOSER_HOME environment variable must be set», повторити її
+з явно заданим каталогом Composer.
+
+~~~bash
+sudo env COMPOSER_HOME=/root/.composer bash /var/lib/cloud/instance/scripts/part-001
+~~~
+
+Ця команда стосується зупинки на встановленні Composer до створення .env
+та виконання міграцій. Після повторного запуску перевірити останні рядки виводу.
+[Змінна COMPOSER_HOME](https://getcomposer.org/doc/03-cli.md#composer-home).
+
 Nginx обслуговує лише public/. PHP-код, vendor і .env не публікуються.
 storage та bootstrap/cache доступні для запису користувачу www-data.
 [Розгортання Laravel](https://laravel.com/docs/13.x/deployment),
