@@ -1,0 +1,32 @@
+name: demo-data
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: demo04-mysql
+    environment:
+      MYSQL_DATABASE: shop
+      MYSQL_USER: demo
+      MYSQL_PASSWORD: lecture-demo
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - MYSQL_PWD="$$MYSQL_PASSWORD" mysql -h 127.0.0.1 -u "$$MYSQL_USER" "$$MYSQL_DATABASE" -Nse "SELECT 1" >/dev/null
+      interval: 3s
+      timeout: 2s
+      retries: 25
+
+  memcached:
+    image: memcached:1.6.45
+    container_name: demo04-memcached
+
+networks:
+  default:
+    name: demo04-shared
+    external: true
+
+volumes:
+  db-data:

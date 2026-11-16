@@ -1,0 +1,19 @@
+name: demo-depends
+
+services:
+  web:
+    image: python:3.13-slim
+    command:
+      - sh
+      - -ec
+      - |
+        mkdir -p /www
+        printf 'ready\n' > /www/index.html
+        sleep 5
+        exec python -m http.server 8080 --directory /www
+
+  client:
+    image: alpine:3.22
+    command: [wget, -T, "2", -qO-, "http://web:8080/"]
+    restart: "on-failure:8"
+    depends_on: [web]

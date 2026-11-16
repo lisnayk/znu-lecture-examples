@@ -1,0 +1,41 @@
+name: demo-configs-secrets
+
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: shop
+      MYSQL_USER: demo
+      MYSQL_PASSWORD_FILE: /run/secrets/db_password
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+    secrets:
+      - db_password
+    volumes:
+      - data:/var/lib/mysql
+    healthcheck:
+      test: [CMD, mysqladmin, ping, -h, 127.0.0.1, --silent]
+      interval: 3s
+      timeout: 2s
+      retries: 30
+
+  app:
+    image: webdevops/php-apache:8.4
+    entrypoint: [php, /opt/demo/check.php]
+    volumes:
+      - ./check.php:/opt/demo/check.php:ro
+    configs:
+      - source: app_settings
+        target: /etc/demo/app.ini
+    secrets:
+      - db_password
+
+configs:
+  app_settings:
+    file: ./app.ini
+
+secrets:
+  db_password:
+    file: ./.local/db-password.txt
+
+volumes:
+  data:

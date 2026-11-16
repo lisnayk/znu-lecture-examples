@@ -1,0 +1,23 @@
+name: demo-mysql-restore
+
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: "${MYSQL_DATABASE:?Створіть .env за зразком}"
+      MYSQL_USER: "${MYSQL_USER:?Створіть .env за зразком}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD:?Створіть .env за зразком}"
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+    volumes:
+      - data:/var/lib/mysql
+      - ./backup.sql:/docker-entrypoint-initdb.d/10-backup.sql:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - MYSQL_PWD="$$MYSQL_PASSWORD" mysql -h 127.0.0.1 -u "$$MYSQL_USER" "$$MYSQL_DATABASE" -Nse "SELECT COUNT(*) FROM products" >/dev/null
+      interval: 3s
+      timeout: 2s
+      retries: 25
+
+volumes:
+  data:

@@ -1,0 +1,21 @@
+name: legacy-vue
+
+services:
+  ui:
+    image: node:14.21.3-alpine
+    working_dir: /app
+    command:
+      - sh
+      - -ec
+      - |
+        npm install --global npm@9.9.4
+        npm ci --no-audit --no-fund
+        exec npm run dev
+    volumes:
+      - .:/app
+      - dependencies:/app/node_modules
+    ports:
+      - "127.0.0.1:5174:5173"
+
+volumes:
+  dependencies:

@@ -1,0 +1,26 @@
+name: demo-depends-ready
+
+services:
+  web:
+    image: python:3.13-slim
+    command:
+      - sh
+      - -ec
+      - |
+        mkdir -p /www
+        printf 'ready\n' > /www/index.html
+        sleep 5
+        exec python -m http.server 8080 --directory /www
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/', timeout=1).close()"]
+      interval: 1s
+      timeout: 1s
+      retries: 10
+
+  client:
+    image: alpine:3.22
+    command: [wget, -T, "2", -qO-, "http://web:8080/"]
+    restart: "on-failure:8"
+    depends_on:
+      web:
+        condition: service_healthy

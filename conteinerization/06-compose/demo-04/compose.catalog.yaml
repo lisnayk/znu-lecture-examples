@@ -1,0 +1,19 @@
+name: demo-catalog
+
+services:
+  app:
+    image: mysql:8.4
+    entrypoint: ["bash", "/demo/client.sh"]
+    command: ["seed"]
+    environment:
+      MYSQL_PWD: lecture-demo
+    volumes:
+      - ./client.sh:/demo/client.sh:ro
+    external_links:
+      - demo04-mysql:db
+      - demo04-memcached:cache
+
+networks:
+  default:
+    name: demo04-shared
+    external: true

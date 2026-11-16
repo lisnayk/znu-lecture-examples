@@ -1,0 +1,22 @@
+name: demo-public-private
+
+services:
+  gateway:
+    image: nginx:1.28-alpine
+    ports:
+      - "127.0.0.1:8083:80"
+    volumes:
+      - ./gateway.conf:/etc/nginx/conf.d/default.conf:ro
+    networks: [public, private]
+    depends_on: [api]
+
+  api:
+    image: nginx:1.28-alpine
+    volumes:
+      - ./api.conf:/etc/nginx/conf.d/default.conf:ro
+    networks: [private]
+
+networks:
+  public:
+  private:
+    internal: true
